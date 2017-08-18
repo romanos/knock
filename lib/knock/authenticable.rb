@@ -47,7 +47,9 @@ module Knock::Authenticable
         unless instance_variable_defined?(memoization_var_name)
           current =
             begin
-              Knock::AuthToken.new(token: token).entity_for(entity_class)
+              alg = JWT.decode( token, nil, false )[1]['alg']
+              Knock::AuthToken.new(token: token, 
+                verify_options: { algorithm: alg }).entity_for(entity_class)
             rescue Knock.not_found_exception_class, JWT::DecodeError
               nil
             end

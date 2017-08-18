@@ -7,8 +7,14 @@ module Knock
 
     def initialize payload: {}, token: nil, verify_options: {}
       if token.present?
-        @payload, _ = JWT.decode token.to_s, decode_key, true, options.merge(verify_options)
-        @token = token
+        if verify_options[:algorithm] == 'HS256'
+          secret = Rails.application.config_for(:auth0)['secret']
+          @payload, _ = JWT.decode token.to_s, secret, true, options.merge(verify_options)
+          @token = token
+        else
+          @payload, _ = JWT.decode token.to_s, decode_key, true, options.merge(verify_options)
+          @token = token
+        end
       else
         @payload = claims.merge(payload)
         @token = JWT.encode @payload,
